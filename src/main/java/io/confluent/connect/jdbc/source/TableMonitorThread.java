@@ -48,9 +48,10 @@ public class TableMonitorThread extends Thread {
   private Set<String> blacklist;
   private List<String> tables;
   private Set<String> tableTypes;
+  private Set<String> tablePrefix;
 
   public TableMonitorThread(CachedConnectionProvider cachedConnectionProvider, ConnectorContext context, String schemaPattern, long pollMs,
-                            Set<String> whitelist, Set<String> blacklist, Set<String> tableTypes) {
+                            Set<String> whitelist, Set<String> blacklist, Set<String> tableTypes, Set<String> tablePrefix) {
     this.cachedConnectionProvider = cachedConnectionProvider;
     this.schemaPattern = schemaPattern;
     this.context = context;
@@ -60,6 +61,7 @@ public class TableMonitorThread extends Thread {
     this.blacklist = blacklist;
     this.tables = null;
     this.tableTypes = tableTypes;
+    this.tablePrefix = tablePrefix;
   }
 
   @Override
@@ -134,6 +136,19 @@ public class TableMonitorThread extends Thread {
           filteredTables.add(table);
         }
       }
+      /*add by zml*/
+    } else if (tablePrefix != null) {
+      filteredTables = new ArrayList<>(tables.size());
+      for (String table : tables) {
+        for (String prefix : tablePrefix) {
+          //log.info("table:" + table + " prefix:" + prefix + " indexof:" + String.valueOf(table.indexOf(prefix)));
+          if (table.indexOf(prefix) == 0) {
+            filteredTables.add(table);
+          }
+        }
+     //end add
+      }
+
     } else {
       filteredTables = tables;
     }

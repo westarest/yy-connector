@@ -131,7 +131,7 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
       builder.append(" > ?");
       builder.append(" ORDER BY ");
       builder.append(JdbcUtils.quoteString(incrementingColumn, quoteString));
-      builder.append(" ASC");
+      builder.append(" ASC LIMIT 1000");
     } else if (timestampColumn != null) {
       builder.append(" WHERE ");
       builder.append(JdbcUtils.quoteString(timestampColumn, quoteString));
@@ -196,6 +196,7 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
       default:
         throw new ConnectException("Unexpected query mode: " + mode);
     }
+    log.info("table:{}, offset:{}",name, offset);
     return new SourceRecord(partition, offset.toMap(), topic, record.schema(), record);
   }
 

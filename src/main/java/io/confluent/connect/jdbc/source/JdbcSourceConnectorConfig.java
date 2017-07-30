@@ -123,13 +123,19 @@ public class JdbcSourceConnectorConfig extends AbstractConfig {
 
   public static final String TABLE_WHITELIST_CONFIG = "table.whitelist";
   private static final String TABLE_WHITELIST_DOC =
-      "List of tables to include in copying. If specified, table.blacklist may not be set.";
+      "List of tables to include in copying. If specified, table.prefix and table.blacklist may not be set.";
   public static final String TABLE_WHITELIST_DEFAULT = "";
   private static final String TABLE_WHITELIST_DISPLAY = "Table Whitelist";
 
+  public static final String TABLE_PREFIX_CONFIG = "table.prefix";
+  private static final String TABLE_PREFIX_DOC =
+      "List of tables prefix to include in copying. If specified, table.blacklist and table.whitelist may not be set.";
+  public static final String TABLE_PREFIX_DEFAULT = "";
+  private static final String TABLE_PREFIX_DISPLAY = "Table Prefix";
+
   public static final String TABLE_BLACKLIST_CONFIG = "table.blacklist";
   private static final String TABLE_BLACKLIST_DOC =
-      "List of tables to exclude from copying. If specified, table.whitelist may not be set.";
+      "List of tables to exclude from copying. If specified, table.whitelist and table.prefix may not be set.";
   public static final String TABLE_BLACKLIST_DEFAULT = "";
   private static final String TABLE_BLACKLIST_DISPLAY = "Table Blacklist";
 
@@ -208,6 +214,8 @@ public class JdbcSourceConnectorConfig extends AbstractConfig {
         .define(CONNECTION_ATTEMPTS_CONFIG, Type.INT, CONNECTION_ATTEMPTS_DEFAULT, Importance.LOW, CONNECTION_ATTEMPTS_DOC, DATABASE_GROUP, 4, Width.SHORT, CONNECTION_ATTEMPTS_DISPLAY)
         .define(CONNECTION_BACKOFF_CONFIG, Type.LONG, CONNECTION_BACKOFF_DEFAULT, Importance.LOW, CONNECTION_BACKOFF_DOC, DATABASE_GROUP, 5, Width.SHORT, CONNECTION_BACKOFF_DISPLAY)
         .define(TABLE_WHITELIST_CONFIG, Type.LIST, TABLE_WHITELIST_DEFAULT, Importance.MEDIUM, TABLE_WHITELIST_DOC, DATABASE_GROUP, 4, Width.LONG, TABLE_WHITELIST_DISPLAY,
+                TABLE_RECOMMENDER)
+        .define(TABLE_PREFIX_CONFIG, Type.LIST, TABLE_PREFIX_DEFAULT, Importance.MEDIUM, TABLE_PREFIX_DOC, DATABASE_GROUP, 4, Width.LONG, TABLE_PREFIX_DISPLAY,
                 TABLE_RECOMMENDER)
         .define(TABLE_BLACKLIST_CONFIG, Type.LIST, TABLE_BLACKLIST_DEFAULT, Importance.MEDIUM, TABLE_BLACKLIST_DOC, DATABASE_GROUP, 5, Width.LONG, TABLE_BLACKLIST_DISPLAY,
                 TABLE_RECOMMENDER)

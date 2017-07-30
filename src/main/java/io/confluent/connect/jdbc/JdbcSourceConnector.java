@@ -90,11 +90,14 @@ public class JdbcSourceConnector extends SourceConnector {
     Set<String> blacklistSet = blacklist.isEmpty() ? null : new HashSet<>(blacklist);
     List<String> tableTypes =  config.getList(JdbcSourceConnectorConfig.TABLE_TYPE_CONFIG);
     Set<String> tableTypesSet =  new HashSet<>(tableTypes);
+    List<String> tablePrefixList  = config.getList(JdbcSourceConnectorConfig.TABLE_PREFIX_CONFIG);
+    Set<String> tablePrefixSet = tablePrefixList.isEmpty() ? null : new HashSet<>(tablePrefixList);
 
 
-    if (whitelistSet != null && blacklistSet != null)
+    if (whitelistSet != null && blacklistSet != null && tablePrefixSet != null)
       throw new ConnectException(JdbcSourceConnectorConfig.TABLE_WHITELIST_CONFIG + " and "
-                                 + JdbcSourceConnectorConfig.TABLE_BLACKLIST_CONFIG + " are "
+                                 + JdbcSourceConnectorConfig.TABLE_BLACKLIST_CONFIG + " and "
+                                 + JdbcSourceConnectorConfig.TABLE_PREFIX_CONFIG + " are "
                                  + "exclusive.");
     String query = config.getString(JdbcSourceConnectorConfig.QUERY_CONFIG);
     String schemaPattern = config.getString(JdbcSourceConnectorConfig.SCHEMA_PATTERN_CONFIG);
@@ -106,7 +109,7 @@ public class JdbcSourceConnector extends SourceConnector {
       // query.
       whitelistSet = Collections.emptySet();
     }
-    tableMonitorThread = new TableMonitorThread(cachedConnectionProvider, context, schemaPattern, tablePollMs, whitelistSet, blacklistSet, tableTypesSet);
+    tableMonitorThread = new TableMonitorThread(cachedConnectionProvider, context, schemaPattern, tablePollMs, whitelistSet, blacklistSet, tableTypesSet, tablePrefixSet);
     tableMonitorThread.start();
   }
 
