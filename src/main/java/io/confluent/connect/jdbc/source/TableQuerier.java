@@ -24,6 +24,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import io.confluent.connect.jdbc.util.IncrementIDException;
+
 /**
  * TableQuerier executes queries against a specific table. Implementations handle different types
  * of queries: periodic bulk loading, incremental loads using auto incrementing IDs, incremental
@@ -59,6 +61,9 @@ abstract class TableQuerier implements Comparable<TableQuerier> {
     this.mapNumerics = mapNumerics;
     this.lastUpdate = 0;
   }
+  public String name(){
+	  return name;
+  }
 
   public long getLastUpdate() {
     return lastUpdate;
@@ -92,7 +97,7 @@ abstract class TableQuerier implements Comparable<TableQuerier> {
     return resultSet.next();
   }
 
-  public abstract SourceRecord extractRecord() throws SQLException;
+  public abstract SourceRecord extractRecord() throws SQLException,IncrementIDException;
 
   public void reset(long now) {
     closeResultSetQuietly();

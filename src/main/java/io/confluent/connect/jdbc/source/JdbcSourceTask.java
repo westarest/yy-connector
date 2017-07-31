@@ -39,6 +39,7 @@ import io.confluent.connect.jdbc.util.CachedConnectionProvider;
 import io.confluent.connect.jdbc.util.JdbcUtils;
 import io.confluent.connect.jdbc.util.Version;
 
+import io.confluent.connect.jdbc.util.IncrementIDException;
 /**
  * JdbcSourceTask is a Kafka Connect SourceTask implementation that reads from JDBC databases and
  * generates Kafka Connect records.
@@ -206,19 +207,18 @@ public class JdbcSourceTask extends SourceTask {
         boolean hadNext = true;
 		long  oldOffset = 0;
         while (results.size() < batchMaxRows && (hadNext = querier.next())) {
-          SourceRecord record = querier.extractRecord();
-          TimestampIncrementingOffset offset = TimestampIncrementingOffset.fromMap(record.sourceOffset());
-          Long incOffset = offset.getIncrementingOffset();
-		  if (incOffset == 0  || incOffset == oldOffset+1)
-		  {
-			results.add(querier.extractRecord());
-		  }
-		  else
-		  {
+			try{
+				SourceRecord record = querier.extractRecord();
+				results.add(record);
+			}
+			catch(IncrementIDException e){
 			  //避免一次id跳开的事故，减少部分id漏同步的情况，再有下一次就没办法了,
+		      log.debug("name {}, IncrementIDException {}, sleep 1000ms.", querier.name(),e);
 			  hadNext = false;
+			  time.sleep(1000);
 			  break;
-		  }
+			}
+		
         }
 
         if (!hadNext) {

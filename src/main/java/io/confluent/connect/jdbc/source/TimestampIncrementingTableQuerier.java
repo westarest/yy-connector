@@ -35,6 +35,7 @@ import java.util.Map;
 import io.confluent.connect.jdbc.util.DateTimeUtils;
 import io.confluent.connect.jdbc.util.JdbcUtils;
 
+import io.confluent.connect.jdbc.util.IncrementIDException;
 /**
  * <p>
  *   TimestampIncrementingTableQuerier performs incremental loading of data using two mechanisms: a
@@ -61,6 +62,7 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
   private String incrementingColumn;
   private long timestampDelay;
   private TimestampIncrementingOffset offset;
+  private int offsetMissTimes;
 
   public TimestampIncrementingTableQuerier(QueryMode mode, String name, String topicPrefix,
                                            String timestampColumn, String incrementingColumn,
@@ -71,6 +73,7 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
     this.incrementingColumn = incrementingColumn;
     this.timestampDelay = timestampDelay;
     this.offset = TimestampIncrementingOffset.fromMap(offsetMap);
+	this.offsetMissTimes = 0;
   }
 
   @Override
@@ -183,9 +186,31 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
   */
 
   @Override
-  public SourceRecord extractRecord() throws SQLException {
+  public SourceRecord extractRecord() throws SQLException,IncrementIDException {
     final Struct record = DataConverter.convertRecord(schema, resultSet, mapNumerics);
-    offset = extractOffset(schema, record);
+    TimestampIncrementingOffset newOffset = extractOffset(schema, record);
+	Long oldOs     = offset.getIncrementingOffset();
+	Long newOs     = newOffset.getIncrementingOffset();
+	log.debug("name:{} the old offset is {}, new offset is {}", name, oldOs, newOs);
+	if (oldOs == -1 || newOs == oldOs + 1)
+	{
+	  offset = newOffset;
+	  offsetMissTimes = 0;
+	}
+	else
+	{
+		offsetMissTimes++;
+		if(offsetMissTimes <= 3)//3次
+		{
+			throw new IncrementIDException("table:"+name +" offset exception, offset:" + oldOs +" newOffset:" + newOs);
+		}
+		else
+		{
+			offset = newOffset;
+			log.debug("name:{} the old offset is {}, new offset is {} is miss 3 times, ignore it.", name, oldOs, newOs);
+			//错误无法跳过，默认id跳开
+		}
+	}
     // TODO: Key?
     final String topic;
     final Map<String, String> partition;
