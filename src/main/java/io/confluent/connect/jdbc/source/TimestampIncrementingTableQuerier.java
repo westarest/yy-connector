@@ -175,6 +175,12 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
     }
     return stmt.executeQuery();
   }
+  /*
+  @Override
+  public boolean next() throws SQLException {
+    return resultSet.next();
+  }
+  */
 
   @Override
   public SourceRecord extractRecord() throws SQLException {
@@ -196,7 +202,7 @@ public class TimestampIncrementingTableQuerier extends TableQuerier {
       default:
         throw new ConnectException("Unexpected query mode: " + mode);
     }
-    log.info("table:{}, offset:{}",name, offset);
+    log.debug("extractRecord: table:{} offset:{}", name, offset.toMap().get("incrementing"));
     return new SourceRecord(partition, offset.toMap(), topic, record.schema(), record);
   }
 

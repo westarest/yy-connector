@@ -204,8 +204,21 @@ public class JdbcSourceTask extends SourceTask {
 
         int batchMaxRows = config.getInt(JdbcSourceTaskConfig.BATCH_MAX_ROWS_CONFIG);
         boolean hadNext = true;
+		long  oldOffset = 0;
         while (results.size() < batchMaxRows && (hadNext = querier.next())) {
-          results.add(querier.extractRecord());
+          SourceRecord record = querier.extractRecord();
+          TimestampIncrementingOffset offset = TimestampIncrementingOffset.fromMap(record.sourceOffset());
+          Long incOffset = offset.getIncrementingOffset();
+		  if (incOffset == 0  || incOffset == oldOffset+1)
+		  {
+			results.add(querier.extractRecord());
+		  }
+		  else
+		  {
+			  //避免一次id跳开的事故，减少部分id漏同步的情况，再有下一次就没办法了,
+			  hadNext = false;
+			  break;
+		  }
         }
 
         if (!hadNext) {
